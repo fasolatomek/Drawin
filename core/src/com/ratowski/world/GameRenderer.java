@@ -79,6 +79,8 @@ public class GameRenderer {
 
         for (int i = 0; i < myWorld.spells.size(); i++) {
             Spell spell = myWorld.spells.get(i);
+            Spell spell2 = myWorld.spells.get(i);
+
 
             shapeRenderer.setColor(spell.color[0], spell.color[1], spell.color[2], (2-spell.scale.getValue()));
 
