@@ -3,8 +3,6 @@ package com.ratowski.world;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
-import com.badlogic.gdx.math.Path;
-import com.badlogic.gdx.math.Shape2D;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.ratowski.objects.Enemy;
@@ -18,7 +16,9 @@ public class GameWorld {
     private int score = 0;
     private float runTime = 0;
     float scaleFactorX, scaleFactorY;
-    float[] spellPoints = {0};
+
+    float time = 0;
+    boolean timerOn = false;
 
     private ParticleEffect effect;
     ParticleEffectPool effectPool;
@@ -32,49 +32,29 @@ public class GameWorld {
     private GameState currentState;
     public int midPointY;
 
-    public GameWorld(int midPointX, int midPointY, float scaleFactorX, float scaleFactorY) {
-        currentState = GameState.MENU;
+    public GameWorld(int midPointY, float scaleFactorX, float scaleFactorY) {
+        currentState = GameState.RUNNING;
         this.midPointY = midPointY;
         this.scaleFactorX = scaleFactorX;
         this.scaleFactorY = scaleFactorY;
 
-        Random random = new Random();
-        enemies.add(new Enemy(new Vector2(0, 0), 5, new Vector2(40, 0), new Vector2(200, 200),random.nextInt(4)+1));
-
-        effect = new ParticleEffect();
-        effect.load(Gdx.files.internal("data/effects/shatter.p"), Gdx.files.internal("data/effects/"));
-        effectPool = new ParticleEffectPool(effect, 1, 1);
+        setupEffects();
+        spawnEnemies(2);
+        resetTimer(10);
     }
 
 
     public void update(float delta) {
         runTime += delta;
 
-        updateCombat(delta);
-
-        for (int i = 0; i < spellPoints.length / 2; i++) {
-            System.out.println("Spell point " + i + ": (" + spellPoints[2 * i] + "," + spellPoints[2 * i + 1] + ")");
+        if (delta > .15f) {
+            delta = .15f;
         }
 
-        if(enemies.size()==0){
-            Random random = new Random();
-            enemies.add(new Enemy(new Vector2(0, 0), 5, new Vector2(0, 0), new Vector2(200, 200),random.nextInt(4)+1));
-        }
-
-        for(int i=0;i<enemies.size();i++){
-            enemies.get(i).update(delta);
-            if(!enemies.get(i).alive){
-                enemies.remove(i);
-            }
-        }
-
-        for (int i = effects.size - 1; i >= 0; i--) {
-            ParticleEffectPool.PooledEffect effect = effects.get(i);
-            if (effect.findEmitter("good").getPercentComplete() >= 0.5) {
-                effect.free();
-                effects.removeIndex(i);
-            }
-        }
+        updateTimer(delta);
+        updateSpells(delta);
+        updateEnemies(delta);
+        updateEffects();
 
         switch (currentState) {
             case READY:
@@ -90,16 +70,13 @@ public class GameWorld {
     }
 
     private void updateReady(float delta) {
-
         if (delta > .15f) {
             delta = .15f;
         }
-
     }
 
 
     public void updateRunning(float delta) {
-
         if (delta > .15f) {
             delta = .15f;
         }
@@ -119,6 +96,7 @@ public class GameWorld {
 
     public void start() {
         currentState = GameState.RUNNING;
+        restart();
     }
 
     public void menu() {
@@ -130,7 +108,11 @@ public class GameWorld {
     }
 
     public void restart() {
+        currentState=GameState.RUNNING;
         score = 0;
+        resetTimer(10);
+        enemies.clear();
+        spawnEnemies(2);
     }
 
     public boolean isReady() {
@@ -159,26 +141,34 @@ public class GameWorld {
             points[i].x /= scaleFactorX;
             points[i].y /= scaleFactorY;
         }
-
         Spell spell = new Spell(getSpellType(name), 0.5f, new Vector2(x / scaleFactorX, y / scaleFactorY), new Vector2(width, height), 0.5f, points);
         spells.add(spell);
     }
 
-
-    private void updateCombat(float delta) {
-        for (int i = 0; i < spells.size(); i++) {
-            spells.get(i).update(delta);
-            for (int j = 0; j < enemies.size(); j++) {
-                if (enemies.get(j).hit(spells.get(i))) {
-                    enemies.get(j).isHit(spells.get(i));
-                }
+    private void updateTimer (float delta) {
+        if (timerOn) {
+            time -= delta;
+            if(time<0){
+                timerOn=false;
+                currentState=GameState.GAMEOVER;
             }
-            if(spells.get(i).scale.getValue()==2){
-                spells.remove(i);
+        }
+    }
+
+    private void updateSpells(float delta) {
+        for (int i = 0; i < spells.size(); i++) {
+            Spell spell = spells.get(i);
+            spell.update(delta);
+            for (int j = 0; j < enemies.size(); j++) {
+                Enemy enemy = enemies.get(j);
+                if (enemy.hit(spell)) {
+                    enemy.isHit(spell);
+                }
             }
         }
         for (int i = 0; i < spells.size(); i++) {
-            if (spells.get(i).depth > 50) {
+            Spell spell = spells.get(i);
+            if (spell.isFinished) {
                 spells.remove(i);
             }
         }
@@ -200,6 +190,62 @@ public class GameWorld {
         } else {
             return 4;
         }
+    }
+
+    private void updateEnemies(float delta) {
+
+        for (int i = 0; i < enemies.size(); i++) {
+            enemies.get(i).update(delta);
+        }
+
+        if (allEnemiesDead()) {
+            enemies.clear();
+            spawnEnemies(4);
+        }
+
+    }
+
+    private boolean allEnemiesDead() {
+        for (int i = 0; i < enemies.size(); i++) {
+            if (enemies.get(i).isAlive) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void spawnEnemies(int howmuch) {
+        resetTimer(10);
+        Random random = new Random();
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                Enemy enemy = new Enemy(new Vector2(40 + 200 * i, 50 + 200 * j), 0, new Vector2(200, 200), random.nextInt(3) + 1);
+                enemies.add(enemy);
+            }
+        }
+    }
+
+    private void updateEffects() {
+        for (int i = effects.size - 1; i >= 0; i--) {
+            ParticleEffectPool.PooledEffect effect = effects.get(i);
+            if (effect.findEmitter("good").getPercentComplete() >= 0.5) {
+                effect.free();
+                effects.removeIndex(i);
+            }
+        }
+
+    }
+
+    private void setupEffects() {
+        effect = new ParticleEffect();
+        effect.load(Gdx.files.internal("data/effects/shatter.p"), Gdx.files.internal("data/effects/"));
+        effectPool = new ParticleEffectPool(effect, 1, 1);
+    }
+
+    private void resetTimer(float time) {
+        this.time = time;
+        timerOn=true;
     }
 
 }

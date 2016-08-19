@@ -49,12 +49,18 @@ public class InputHandler implements InputProcessor {
     public void touchDragged(int screenX, int screenY){
         screenX = scaleX(screenX);
         screenY = scaleY(screenY);
-        myWorld.addSpellEffect(screenX,screenY);
+        //myWorld.addSpellEffect(screenX,screenY);
     }
 
     public void touchDown(int screenX, int screenY){
         screenX = scaleX(screenX);
         screenY = scaleY(screenY);
+
+        if(myWorld.isGameOver()){
+            if(screenX>400) {
+                myWorld.start();
+            }
+        }
     }
 
     public void touchUp(int screenX, int screenY){

@@ -13,12 +13,16 @@ public class AssetLoader {
 
     public static Preferences prefs;
 
+    public static BitmapFont font;
+
     public static void load() {
 
         prefs = Gdx.app.getPreferences("Player");
         if (!prefs.contains("highScore")) {
             prefs.putInteger("highScore", 0);
         }
+
+        font = new BitmapFont(Gdx.files.internal("data/berlin.fnt"),true);
     }
 
     public static void dispose() {

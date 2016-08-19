@@ -19,6 +19,7 @@ public class Spell {
     public Value scale = new Value();
     private TweenManager manager;
     public int type;
+    public boolean isFinished=false;
 
     public Spell(int type, float power, Vector2 position, Vector2 size, float speed, Vector2[] points) {
         this.position = position;
@@ -27,10 +28,10 @@ public class Spell {
         this.points = points;
         this.size = size;
 
-        scale.setValue(1);
+        scale.setValue(1.1f);
         Tween.registerAccessor(Value.class, new ValueAccessor());
         manager = new TweenManager();
-        Tween.to(scale, -1, 1).target(2).delay(0).ease(TweenEquations.easeOutQuad).start(manager);
+        Tween.to(scale, -1, 0.5f).target(1.6f).delay(0).ease(TweenEquations.easeOutQuad).start(manager);
 
         color = setColor(type);
 
@@ -39,11 +40,12 @@ public class Spell {
     public void update(float delta) {
         depth += speed;
 
-        if (scale.getValue() < 2) {
+        if(scale.getValue() >= 1.6){
+           isFinished=true;
+        }
+        else{
             manager.update(delta);
         }
-
-
     }
 
     private float[] setColor(int type) {

@@ -29,6 +29,9 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
     GestureOverlayView overlayView;
     View gameView;
     BGame game;
+    Thread thread;
+
+    int timer = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,7 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
         setupGestureLibrary();
         setupOverlayView();
         setupLayout();
+
     }
 
     @Override
@@ -49,12 +53,20 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
 
     @Override
     public void onGesture(GestureOverlayView gestureOverlayView, MotionEvent motionEvent) {
-        myGesture = overlayView.getGesture();
+        timer++;
+        System.out.println("Timer: " + timer);
         gesturePerformed = true;
+
+        if(timer>30){
+            gestureOverlayView.cancelGesture();
+            timer = 0;
+        }
     }
 
     @Override
     public void onGestureEnded(GestureOverlayView gestureOverlayView, MotionEvent motionEvent) {
+        timer = 0;
+        myGesture = overlayView.getGesture();
         if (gesturePerformed) {
             recognizeGesture();
         }
@@ -75,12 +87,11 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
 
         overlayView.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
-                game.getGameScreen().passTouchEvent(event.getAction(), (int)event.getX(), (int)event.getY());
+                game.getGameScreen().passTouchEvent(event.getAction(), (int) event.getX(), (int) event.getY());
                 return true;
             }
         });
 
-        overlayView.setDrawingCacheEnabled(true);
         overlayView.addOnGestureListener(this);
         overlayView.addOnGesturePerformedListener(this);
         overlayView.setGestureColor(0x99dddddd);
