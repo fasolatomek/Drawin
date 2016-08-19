@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.ratowski.helpers.OverlayInterface;
 import com.ratowski.objects.Enemy;
 import com.ratowski.objects.Spell;
 
@@ -13,12 +14,14 @@ import java.util.Random;
 
 public class GameWorld {
 
+    public OverlayInterface overlayInterface;
+
     private int score = 0;
     private float runTime = 0;
     float scaleFactorX, scaleFactorY;
 
     float time = 0;
-    boolean timerOn = false;
+    public boolean timerOn = false;
 
     private ParticleEffect effect;
     ParticleEffectPool effectPool;
@@ -32,11 +35,13 @@ public class GameWorld {
     private GameState currentState;
     public int midPointY;
 
-    public GameWorld(int midPointY, float scaleFactorX, float scaleFactorY) {
+    public GameWorld(int midPointY, float scaleFactorX, float scaleFactorY, OverlayInterface overlayInterface) {
         currentState = GameState.RUNNING;
         this.midPointY = midPointY;
         this.scaleFactorX = scaleFactorX;
         this.scaleFactorY = scaleFactorY;
+
+        this.overlayInterface=overlayInterface;
 
         setupEffects();
         spawnEnemies(2);
@@ -105,14 +110,18 @@ public class GameWorld {
 
     public void ready() {
         currentState = GameState.READY;
+        start();
+
     }
 
     public void restart() {
         currentState=GameState.RUNNING;
         score = 0;
         resetTimer(10);
+        timerOn=false;
         enemies.clear();
         spawnEnemies(2);
+        overlayInterface.enable();
     }
 
     public boolean isReady() {
@@ -150,6 +159,7 @@ public class GameWorld {
             time -= delta;
             if(time<0){
                 timerOn=false;
+                overlayInterface.disable();
                 currentState=GameState.GAMEOVER;
             }
         }
@@ -199,8 +209,7 @@ public class GameWorld {
         }
 
         if (allEnemiesDead()) {
-            enemies.clear();
-            spawnEnemies(4);
+            restart();
         }
 
     }
@@ -245,7 +254,6 @@ public class GameWorld {
 
     private void resetTimer(float time) {
         this.time = time;
-        timerOn=true;
     }
 
 }

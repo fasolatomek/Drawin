@@ -124,6 +124,9 @@ public class GameRenderer {
         for (int i = 0; i < myWorld.enemies.size(); i++) {
             Enemy enemy = myWorld.enemies.get(i);
             if(enemy.isAlive) {
+                if(enemy.isEasy){
+
+                }
                 shapeRenderer.setColor(enemy.color[0], enemy.color[1], enemy.color[2], alpha.getValue());
             }
             else{

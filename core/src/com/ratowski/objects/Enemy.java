@@ -13,6 +13,7 @@ public class Enemy {
     public int type;
     public float color[] = {0};
     public boolean isAlive = true;
+    public boolean isEasy = true;
 
     public Enemy(Vector2 position, float depth, Vector2 size, int type) {
         this.position = position;

@@ -30,6 +30,7 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
     View gameView;
     BGame game;
     Thread thread;
+    AndroidOverlayInterface androidOverlayInterface;
 
     int timer = 0;
 
@@ -38,11 +39,11 @@ public class AndroidLauncher extends AndroidApplication implements GestureOverla
         super.onCreate(savedInstanceState);
         AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 
-        game = new BGame();
-        gameView = initializeForView(game, config);
-
         setupGestureLibrary();
         setupOverlayView();
+        androidOverlayInterface=new AndroidOverlayInterface(overlayView,this);
+        game = new BGame(androidOverlayInterface);
+        gameView = initializeForView(game, config);
         setupLayout();
 
     }

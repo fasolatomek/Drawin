@@ -3,6 +3,7 @@ package com.ratowski.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.math.Vector2;
+import com.ratowski.helpers.OverlayInterface;
 import com.ratowski.world.GameRenderer;
 import com.ratowski.world.GameWorld;
 import com.ratowski.helpers.InputHandler;
@@ -14,7 +15,7 @@ public class GameScreen implements Screen {
     private GameRenderer renderer;
     private float runTime = 0;
 
-    public GameScreen() {
+    public GameScreen(OverlayInterface overlayInterface) {
 
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
@@ -24,9 +25,15 @@ public class GameScreen implements Screen {
 
         int midPointY = (int) (gameHeight / 2);
 
-        world = new GameWorld(midPointY, screenWidth / gameWidth, screenHeight / gameHeight);
+        world = new GameWorld(midPointY, screenWidth / gameWidth, screenHeight / gameHeight, overlayInterface);
         Gdx.input.setInputProcessor(new InputHandler(world, screenWidth / gameWidth, screenHeight / gameHeight));
         renderer = new GameRenderer(world, (int) gameHeight, midPointY);
+    }
+
+    public GameScreen() {
+
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
     }
 
     @Override

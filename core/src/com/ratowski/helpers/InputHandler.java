@@ -33,6 +33,16 @@ public class InputHandler implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+
+
+        screenX = scaleX(screenX);
+        screenY = scaleY(screenY);
+
+        if(myWorld.isGameOver()){
+            if(screenX>400) {
+                myWorld.ready();
+            }
+        }
         return false;
     }
 
@@ -53,14 +63,11 @@ public class InputHandler implements InputProcessor {
     }
 
     public void touchDown(int screenX, int screenY){
+        myWorld.timerOn = true;
         screenX = scaleX(screenX);
         screenY = scaleY(screenY);
 
-        if(myWorld.isGameOver()){
-            if(screenX>400) {
-                myWorld.start();
-            }
-        }
+
     }
 
     public void touchUp(int screenX, int screenY){
